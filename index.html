@@ -8,25 +8,31 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
         }
+        
+        /* 主欢迎区域 */
         .welcome-container {
             background-color: white;
             padding: 40px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
             text-align: center;
-            max-width: 500px;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
         }
+        
         h1 {
             color: #333;
             margin-bottom: 20px;
             font-size: 2.5em;
         }
+        
         .logout-btn {
             display: inline-block;
             margin-top: 20px;
@@ -37,8 +43,132 @@
             border-radius: 4px;
             transition: background-color 0.3s;
         }
+        
         .logout-btn:hover {
             background-color: #d32f2f;
+        }
+        
+        /* 小游戏容器 */
+        .game-container {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            overflow: hidden;
+        }
+        
+        .game-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
+        }
+        
+        /* 四个角落的游戏位置 */
+        #game1 {
+            top: 20px;
+            left: 20px;
+        }
+        
+        #game2 {
+            top: 20px;
+            right: 20px;
+        }
+        
+        #game3 {
+            bottom: 20px;
+            left: 20px;
+        }
+        
+        #game4 {
+            bottom: 20px;
+            right: 20px;
+        }
+        
+        /* 游戏特定样式 */
+        #memory-game {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .memory-card {
+            width: 100%;
+            height: 40px;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+        
+        .memory-card.flipped {
+            background-color: #2196F3;
+        }
+        
+        #snake-game {
+            position: relative;
+            height: 150px;
+            border: 1px solid #ddd;
+        }
+        
+        .snake-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #4CAF50;
+            border: 1px solid #fff;
+        }
+        
+        .snake-food {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f44336;
+            border-radius: 50%;
+        }
+        
+        #tic-tac-toe {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .ttt-cell {
+            width: 100%;
+            height: 40px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        #reaction-test {
+            text-align: center;
+        }
+        
+        #reaction-btn {
+            padding: 8px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        #reaction-time {
+            font-weight: bold;
+            margin-top: 10px;
         }
     </style>
     <script>
@@ -50,15 +180,352 @@
     </script>
 </head>
 <body>
+    <!-- 四个小游戏 -->
+    <div class="game-container" id="game1">
+        <div class="game-title">记忆翻牌游戏</div>
+        <div id="memory-game"></div>
+    </div>
+    
+    <div class="game-container" id="game2">
+        <div class="game-title">贪吃蛇</div>
+        <div id="snake-game"></div>
+    </div>
+    
+    <div class="game-container" id="game3">
+        <div class="game-title">井字棋</div>
+        <div id="tic-tac-toe"></div>
+    </div>
+    
+    <div class="game-container" id="game4">
+        <div class="game-title">反应测试</div>
+        <div id="reaction-test">
+            <p>点击按钮开始测试</p>
+            <button id="reaction-btn">开始</button>
+            <div id="reaction-time"></div>
+        </div>
+    </div>
+    
+    <!-- 主欢迎区域 -->
     <div class="welcome-container">
         <h1>HELLO, <span id="username"></span></h1>
         <p>您已成功登录系统</p>
+        <p>试试四周的小游戏吧！</p>
         <a href="logout.html" class="logout-btn">退出登录</a>
     </div>
 
     <script>
         // 显示用户名
         document.getElementById('username').textContent = sessionStorage.getItem('username');
+        
+        // ========== 游戏1: 记忆翻牌 ==========
+        (function() {
+            const cards = ['A', 'B', 'C', 'D', 'E', 'F', 'A', 'B', 'C', 'D', 'E', 'F'];
+            let flippedCards = [];
+            let matchedPairs = 0;
+            
+            // 洗牌函数
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // 初始化游戏
+            function initMemoryGame() {
+                const gameContainer = document.getElementById('memory-game');
+                gameContainer.innerHTML = '';
+                flippedCards = [];
+                matchedPairs = 0;
+                
+                const shuffledCards = shuffle([...cards]);
+                
+                shuffledCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'memory-card';
+                    cardElement.dataset.index = index;
+                    cardElement.dataset.value = card;
+                    cardElement.textContent = '?';
+                    cardElement.addEventListener('click', flipCard);
+                    gameContainer.appendChild(cardElement);
+                });
+            }
+            
+            // 翻牌函数
+            function flipCard() {
+                if (flippedCards.length === 2 || this.classList.contains('flipped')) return;
+                
+                this.classList.add('flipped');
+                this.textContent = this.dataset.value;
+                flippedCards.push(this);
+                
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMatch, 500);
+                }
+            }
+            
+            // 检查是否匹配
+            function checkMatch() {
+                const [card1, card2] = flippedCards;
+                
+                if (card1.dataset.value === card2.dataset.value) {
+                    matchedPairs++;
+                    if (matchedPairs === cards.length / 2) {
+                        setTimeout(() => alert('恭喜你赢了！'), 300);
+                    }
+                } else {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                }
+                
+                flippedCards = [];
+            }
+            
+            initMemoryGame();
+        })();
+        
+        // ========== 游戏2: 贪吃蛇 ==========
+        (function() {
+            const gameArea = document.getElementById('snake-game');
+            const gridSize = 10;
+            const width = Math.floor(gameArea.offsetWidth / gridSize) * gridSize;
+            const height = Math.floor(gameArea.offsetHeight / gridSize) * gridSize;
+            
+            gameArea.style.width = width + 'px';
+            gameArea.style.height = height + 'px';
+            
+            let snake = [{x: 5 * gridSize, y: 5 * gridSize}];
+            let food = {};
+            let dx = gridSize;
+            let dy = 0;
+            let gameInterval;
+            let isRunning = false;
+            
+            // 创建食物
+            function createFood() {
+                const maxX = width - gridSize;
+                const maxY = height - gridSize;
+                
+                food = {
+                    x: Math.floor(Math.random() * (maxX / gridSize)) * gridSize,
+                    y: Math.floor(Math.random() * (maxY / gridSize)) * gridSize
+                };
+                
+                // 确保食物不会出现在蛇身上
+                const isOnSnake = snake.some(segment => segment.x === food.x && segment.y === food.y);
+                if (isOnSnake) createFood();
+                
+                // 绘制食物
+                const foodElement = document.createElement('div');
+                foodElement.className = 'snake-food';
+                foodElement.style.left = food.x + 'px';
+                foodElement.style.top = food.y + 'px';
+                gameArea.appendChild(foodElement);
+            }
+            
+            // 绘制蛇
+            function drawSnake() {
+                // 清除之前的蛇
+                document.querySelectorAll('.snake-dot').forEach(el => el.remove());
+                
+                snake.forEach((segment, index) => {
+                    const segmentElement = document.createElement('div');
+                    segmentElement.className = 'snake-dot';
+                    segmentElement.style.left = segment.x + 'px';
+                    segmentElement.style.top = segment.y + 'px';
+                    
+                    // 蛇头不同颜色
+                    if (index === 0) {
+                        segmentElement.style.backgroundColor = '#2E7D32';
+                    }
+                    
+                    gameArea.appendChild(segmentElement);
+                });
+            }
+            
+            // 移动蛇
+            function moveSnake() {
+                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                
+                // 检查碰撞
+                if (
+                    head.x < 0 || head.x >= width || 
+                    head.y < 0 || head.y >= height ||
+                    snake.some(segment => segment.x === head.x && segment.y === head.y)
+                ) {
+                    clearInterval(gameInterval);
+                    alert('游戏结束！得分: ' + (snake.length - 1));
+                    isRunning = false;
+                    return;
+                }
+                
+                snake.unshift(head);
+                
+                // 检查是否吃到食物
+                if (head.x === food.x && head.y === food.y) {
+                    createFood();
+                } else {
+                    snake.pop();
+                }
+                
+                drawSnake();
+            }
+            
+            // 开始游戏
+            function startGame() {
+                if (isRunning) return;
+                
+                snake = [{x: 5 * gridSize, y: 5 * gridSize}];
+                dx = gridSize;
+                dy = 0;
+                
+                document.querySelector('.snake-food')?.remove();
+                createFood();
+                drawSnake();
+                
+                isRunning = true;
+                gameInterval = setInterval(moveSnake, 150);
+            }
+            
+            // 键盘控制
+            document.addEventListener('keydown', e => {
+                if (!isRunning) startGame();
+                
+                switch(e.key) {
+                    case 'ArrowUp':
+                        if (dy !== gridSize) {
+                            dx = 0;
+                            dy = -gridSize;
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (dy !== -gridSize) {
+                            dx = 0;
+                            dy = gridSize;
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        if (dx !== gridSize) {
+                            dx = -gridSize;
+                            dy = 0;
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (dx !== -gridSize) {
+                            dx = gridSize;
+                            dy = 0;
+                        }
+                        break;
+                }
+            });
+            
+            // 点击游戏区域开始
+            gameArea.addEventListener('click', () => {
+                if (!isRunning) startGame();
+            });
+        })();
+        
+        // ========== 游戏3: 井字棋 ==========
+        (function() {
+            const board = document.getElementById('tic-tac-toe');
+            let currentPlayer = 'X';
+            let gameBoard = ['', '', '', '', '', '', '', '', ''];
+            
+            // 创建棋盘
+            function createBoard() {
+                board.innerHTML = '';
+                gameBoard = ['', '', '', '', '', '', '', '', ''];
+                currentPlayer = 'X';
+                
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'ttt-cell';
+                    cell.dataset.index = i;
+                    cell.addEventListener('click', handleCellClick);
+                    board.appendChild(cell);
+                }
+            }
+            
+            // 处理点击单元格
+            function handleCellClick() {
+                const index = this.dataset.index;
+                
+                if (gameBoard[index] !== '' || checkWinner()) return;
+                
+                gameBoard[index] = currentPlayer;
+                this.textContent = currentPlayer;
+                
+                if (checkWinner()) {
+                    setTimeout(() => alert(`${currentPlayer} 赢了！`), 100);
+                    return;
+                }
+                
+                if (!gameBoard.includes('')) {
+                    setTimeout(() => alert('平局！'), 100);
+                    return;
+                }
+                
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            }
+            
+            // 检查胜利条件
+            function checkWinner() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // 行
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // 列
+                    [0, 4, 8], [2, 4, 6]             // 对角线
+                ];
+                
+                return winPatterns.some(pattern => {
+                    const [a, b, c] = pattern;
+                    return gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c];
+                });
+            }
+            
+            createBoard();
+        })();
+        
+        // ========== 游戏4: 反应测试 ==========
+        (function() {
+            const startBtn = document.getElementById('reaction-btn');
+            const reactionTimeDisplay = document.getElementById('reaction-time');
+            let startTime;
+            let timeoutId;
+            
+            startBtn.addEventListener('click', function() {
+                // 禁用按钮
+                this.disabled = true;
+                this.textContent = '等待...';
+                reactionTimeDisplay.textContent = '';
+                
+                // 随机延迟 (1-5秒)
+                const delay = 1000 + Math.random() * 4000;
+                
+                // 设置颜色变化
+                timeoutId = setTimeout(() => {
+                    startBtn.style.backgroundColor = '#4CAF50';
+                    startBtn.textContent = '点击！';
+                    startTime = new Date().getTime();
+                }, delay);
+            });
+            
+            startBtn.addEventListener('click', function(e) {
+                if (this.style.backgroundColor !== 'rgb(76, 175, 80)') return;
+                
+                const endTime = new Date().getTime();
+                const reactionTime = endTime - startTime;
+                
+                reactionTimeDisplay.textContent = `反应时间: ${reactionTime} 毫秒`;
+                this.style.backgroundColor = '#2196F3';
+                this.textContent = '再来一次';
+                this.disabled = false;
+                
+                clearTimeout(timeoutId);
+            }, true); // 使用捕获阶段确保处理顺序正确
+        })();
     </script>
 </body>
 </html>
