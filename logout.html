@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退出登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .logout-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <h2>您已成功退出登录</h2>
+        <p>正在跳转到登录页面...</p>
+    </div>
+
+    <script>
+        // 清除登录状态
+        sessionStorage.removeItem('loggedIn');
+        sessionStorage.removeItem('username');
+        
+        // 3秒后跳转到登录页面
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 3000);
+    </script>
+</body>
+</html>

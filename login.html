@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统登录</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>系统登录</h2>
+        <div class="input-group">
+            <label for="verification">验证密码</label>
+            <input type="password" id="verification" placeholder="请输入验证密码">
+        </div>
+        <div class="input-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" placeholder="请输入用户名">
+        </div>
+        <div class="input-group">
+            <label for="password">用户密码</label>
+            <input type="password" id="password" placeholder="请输入用户密码">
+        </div>
+        <button onclick="login()">登录</button>
+        <div id="error-message" class="error"></div>
+    </div>
+
+    <script>
+        // 预定义的哈希密码（示例值，请替换为实际的哈希值）
+        const PASSWORD_DATA = {
+            verification: "ebe248e29a429b5883c21e200c8d69f11ed18c1154972c6cc7d1bc3f6895540a", 
+            users: {
+                "admin": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", 
+                "user1": "5f4dcc3b5aa765d61d8327deb882cf99"  
+            }
+        };
+
+        function login() {
+            const verification = document.getElementById('verification').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('error-message');
+            
+            if (!verification || !username || !password) {
+                errorElement.textContent = "所有字段都不能为空";
+                return;
+            }
+            
+            try {
+                // 验证程序密码
+                const inputVerificationHash = sha256(verification);
+                
+                if (PASSWORD_DATA.verification !== inputVerificationHash) {
+                    errorElement.textContent = "验证密码错误";
+                    return;
+                }
+                
+                // 验证用户
+                const inputPasswordHash = sha256(password);
+                const storedPasswordHash = PASSWORD_DATA.users[username];
+                
+                if (storedPasswordHash && storedPasswordHash === inputPasswordHash) {
+                    // 设置登录状态和用户名
+                    sessionStorage.setItem('loggedIn', 'true');
+                    sessionStorage.setItem('username', username);
+                    window.location.href = 'index.html';
+                } else {
+                    errorElement.textContent = "用户名或密码错误";
+                }
+            } catch (error) {
+                errorElement.textContent = "系统错误: 登录验证失败";
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
